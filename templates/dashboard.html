@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Ledger Smart Expense Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header id="app-header">
+    <div class="container header-container">
+      <a href="/" class="logo">
+        <div class="logo-icon">
+          <i data-lucide="wallet"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Ledger</h1>
+          <p>Smart Wealth Management</p>
+        </div>
+      </a>
+      
+      <div class="nav-actions">
+        <a href="/dashboard" class="btn btn-secondary" style="border: none; background-color: var(--primary-light); color: var(--primary);" id="nav-dash">
+          <i data-lucide="layout-dashboard"></i>
+          <span style="display: none; sm:inline;">Dashboard</span>
+        </a>
+        <a href="/expenses" class="btn btn-secondary" style="border: none;" id="nav-tx">
+          <i data-lucide="list"></i>
+          <span style="display: none; sm:inline;">Expenses Log</span>
+        </a>
+        <button class="btn-icon" id="theme-toggle" title="Toggle Theme" aria-label="Toggle theme">
+          <i data-lucide="moon" id="theme-icon"></i>
+        </button>
+        <div style="width: 1px; height: 24px; background-color: var(--border-color); margin: 0 4px;"></div>
+        <span class="font-mono" style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); display: none; md:inline;">@{{ username }}</span>
+        <a href="/logout" class="btn btn-secondary btn-danger" style="padding: 10px 14px;" title="Sign Out" aria-label="Sign out">
+          <i data-lucide="log-out"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="container" style="padding-top: 30px; padding-bottom: 50px;">
+    
+    <!-- Welcome Hero -->
+    <div class="welcome-hero">
+      <div>
+        <h2>Welcome back, {{ username }}!</h2>
+        <p>Analyze your monthly cashflows, allocate budgets, and view automated financial advice.</p>
+      </div>
+      <div style="display: flex; gap: 10px; width: 100%; sm:width: auto; margin-top: 10px; sm:margin-top: 0;">
+        <button class="btn btn-secondary" id="btn-add-category">
+          <i data-lucide="tag"></i>
+          <span>Custom Category</span>
+        </button>
+        <button class="btn btn-primary" id="btn-add-expense-trigger">
+          <i data-lucide="plus"></i>
+          <span>Add Expense</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Smart Onboarding / Config Banner if Not Configured -->
+    <div id="advisor-onboarding-banner" class="card" style="display: none; background-color: var(--primary-light); border: 1px solid var(--primary); margin-bottom: 30px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="stat-icon" style="background-color: var(--primary); color: white;">
+            <i data-lucide="sparkles"></i>
+          </div>
+          <div>
+            <h4 class="font-display" style="font-weight: 700; color: var(--text-primary); margin: 0;">Configure Your Smart Advisor</h4>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 0 0;">Set up your Monthly Salary and Savings Goal to unlock budget health scoring, prediction models, and targeted reductions.</p>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-onboard-advisor">Configure Now</button>
+      </div>
+    </div>
+
+    <!-- Stats Matrix Grid -->
+    <div class="stats-grid">
+      <!-- Card: Monthly Salary -->
+      <div class="card stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Monthly Salary</span>
+          <div class="stat-icon" style="background-color: var(--primary-light); color: var(--primary);">
+            <i data-lucide="coins" style="width: 18px; height: 18px;"></i>
+          </div>
+        </div>
+        <div>
+          <div class="stat-value" id="stat-salary">₹0.00</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+            <span class="stat-desc">Monthly Income</span>
+            <button class="btn-action edit" id="btn-edit-salary" title="Edit Income/Savings" style="width: 24px; height: 24px; border-radius: 4px;" aria-label="Edit salary">
+              <i data-lucide="edit-3" style="width: 12px; height: 12px;"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Savings Goal -->
+      <div class="card stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Savings Goal</span>
+          <div class="stat-icon" style="background-color: var(--primary-light); color: var(--primary);">
+            <i data-lucide="target" style="width: 18px; height: 18px;"></i>
+          </div>
+        </div>
+        <div>
+          <div class="stat-value" id="stat-savings-goal">₹0.00</div>
+          <span class="stat-desc">Target amount to save</span>
+        </div>
+      </div>
+
+      <!-- Card: Available Spending Budget -->
+      <div class="card stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Available Budget</span>
+          <div class="stat-icon" style="background-color: var(--primary-light); color: var(--primary);">
+            <i data-lucide="piggy-bank" style="width: 18px; height: 18px;"></i>
+          </div>
+        </div>
+        <div>
+          <div class="stat-value" id="stat-budget">₹0.00</div>
+          <span class="stat-desc">Salary − Savings Goal</span>
+        </div>
+      </div>
+
+      <!-- Card: Spent this Month -->
+      <div class="card stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Spent This Month</span>
+          <div class="stat-icon" id="stat-spent-icon" style="background-color: var(--amber-light); color: var(--amber);">
+            <i data-lucide="trending-up" style="width: 18px; height: 18px;"></i>
+          </div>
+        </div>
+        <div>
+          <div class="stat-value" id="stat-spent">₹0.00</div>
+          <span class="stat-desc">Current Month Expenses</span>
+        </div>
+      </div>
+
+      <!-- Card: Remaining Budget -->
+      <div class="card stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Remaining Budget</span>
+          <div class="stat-icon" id="stat-remaining-icon" style="background-color: var(--emerald-light); color: var(--emerald);">
+            <i data-lucide="wallet-2" style="width: 18px; height: 18px;"></i>
+          </div>
+        </div>
+        <div>
+          <div class="stat-value" id="stat-remaining">₹0.00</div>
+          <span class="stat-desc" id="stat-remaining-desc">Safe to spend</span>
+        </div>
+      </div>
+
+      <!-- Card: Expected Savings -->
+      <div class="card stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Expected Savings</span>
+          <div class="stat-icon" id="stat-expected-savings-icon" style="background-color: var(--emerald-light); color: var(--emerald);">
+            <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+          </div>
+        </div>
+        <div>
+          <div class="stat-value" id="stat-expected-savings">₹0.00</div>
+          <span class="stat-desc" id="stat-expected-savings-desc">Estimated current savings</span>
+        </div>
+      </div>
+
+      <!-- Card: Budget Health Score -->
+      <div class="card stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Budget Health Score</span>
+          <div class="stat-icon" id="stat-health-icon" style="background-color: var(--emerald-light); color: var(--emerald);">
+            <i data-lucide="heart-pulse" style="width: 18px; height: 18px;"></i>
+          </div>
+        </div>
+        <div>
+          <div style="display: flex; align-items: baseline; gap: 8px;">
+            <div class="stat-value" id="stat-health-score" style="font-size: 1.5rem; font-weight: 700;">100</div>
+            <span class="badge" id="stat-health-rating" style="font-size: 0.7rem; padding: 2px 6px; border-radius: 12px; font-weight: bold;">Excellent</span>
+          </div>
+          <span class="stat-desc">Based on saving and spending</span>
+        </div>
+      </div>
+
+      <!-- Card: Top Spending Category -->
+      <div class="card stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Top Category</span>
+          <div class="stat-icon" style="background-color: var(--rose-light); color: var(--rose);">
+            <i data-lucide="award" style="width: 18px; height: 18px;"></i>
+          </div>
+        </div>
+        <div>
+          <div class="stat-value" id="stat-top-category" style="font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">N/A</div>
+          <span class="stat-desc" id="stat-highest">₹0.00 (highest expense)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget Allocation & Advisor Projections Container -->
+    <div style="display: grid; grid-template-columns: 1fr; lg:grid-template-columns: 2fr 1.2fr; gap: 24px; margin-bottom: 30px;" class="advisor-insights-container">
+      <!-- Left: Budget progress & Savings Prediction -->
+      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0;">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 class="font-display" style="font-size: 1rem; font-weight: 700; margin: 0;">Monthly Budget Progress</h3>
+            <span class="badge" id="budget-badge" style="font-family: var(--font-mono);">0% Used</span>
+          </div>
+          <div class="progress-bar-container" style="margin-bottom: 8px; background-color: var(--bg-tertiary); height: 8px; border-radius: 4px; overflow: hidden;">
+            <div class="progress-fill" id="budget-progress-fill" style="height: 100%; width: 0%; background-color: var(--primary); transition: width 0.3s ease;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; margin-bottom: 20px;">
+            <span id="progress-spent-text">Spent: ₹0.00</span>
+            <span id="progress-budget-text">Limit: ₹0.00</span>
+          </div>
+        </div>
+
+        <!-- Savings Prediction Section -->
+        <div style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: auto;">
+          <h4 class="font-display" style="font-size: 0.9rem; font-weight: 700; margin: 0 0 8px 0; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="target" style="width: 16px; height: 16px; color: var(--primary);"></i>
+            <span>Savings Goal Prediction</span>
+          </h4>
+          <div id="savings-prediction-container">
+            <p id="savings-prediction-text" style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Projections will be computed based on transactions...</p>
+            <div id="reduction-suggestions-box" style="margin-top: 10px; display: none;">
+              <p style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">Suggested monthly expense reductions to achieve your savings goal:</p>
+              <ul id="reduction-suggestions-list" style="list-style: none; padding-left: 0; margin: 0; font-size: 0.8rem; display: flex; flex-direction: column; gap: 6px;">
+                <!-- Dynamically Populated -->
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Budget Health Score & Tips -->
+      <div class="card" style="display: flex; flex-direction: column; margin-bottom: 0;">
+        <h3 class="font-display" style="font-size: 1rem; font-weight: 700; margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="heart-pulse" style="color: var(--rose); width: 18px; height: 18px;"></i>
+          <span>Budget Health Index</span>
+        </h3>
+        <div style="text-align: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 12px;">
+          <div style="font-size: 2.5rem; font-weight: 700; line-height: 1; font-family: var(--font-display); color: var(--primary);" id="health-score-value">100</div>
+          <div class="badge" id="health-rating-badge" style="margin-top: 6px; font-weight: 700; font-size: 0.75rem;">Excellent</div>
+        </div>
+        <div style="flex-grow: 1;">
+          <p style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">Advisor Tips to Improve Score:</p>
+          <ul id="health-tips-list" style="font-size: 0.75rem; color: var(--text-secondary); padding-left: 16px; margin: 0; display: flex; flex-direction: column; gap: 4px;">
+            <!-- Dynamically Populated -->
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Smart Suggestions Column -->
+    <div class="suggestions-panel" id="suggestions-panel">
+      <h3 class="suggestions-title">
+        <i data-lucide="sparkles" style="color: var(--primary);"></i>
+        <span>Smart Spending Analytics & Suggestions</span>
+      </h3>
+      <div class="suggestions-grid" id="suggestions-container">
+        <!-- Dynamically Loaded Suggestions -->
+        <div style="text-align: center; padding: 20px; grid-column: span 2; color: var(--text-muted);" id="suggestion-loading">
+          <i data-lucide="loader-2" class="spinner"></i> Loading spending tips...
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Workspace Section -->
+    <div class="charts-grid">
+      <!-- Category distribution donut chart -->
+      <div class="card chart-card">
+        <div class="chart-header">
+          <h3 class="chart-title">Category Breakdown (This Month)</h3>
+          <span class="font-mono text-muted" style="font-size: 0.7rem;">Distribution %</span>
+        </div>
+        <div class="chart-canvas-wrapper">
+          <canvas id="categoryChart"></canvas>
+          <div id="no-category-chart" style="display: none; position: absolute; inset: 0; align-items: center; justify-content: center; flex-direction: column; text-align: center; color: var(--text-muted);">
+            <i data-lucide="pie-chart" style="width: 40px; height: 40px; margin-bottom: 8px;"></i>
+            <p style="font-size: 0.85rem; font-weight: 600;">No spending records yet for this month</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cumulative Spend over Time Line Chart -->
+      <div class="card chart-card">
+        <div class="chart-header">
+          <h3 class="chart-title">Daily Accumulation Curve (This Month)</h3>
+          <span class="font-mono text-muted" style="font-size: 0.7rem;">Running Total</span>
+        </div>
+        <div class="chart-canvas-wrapper">
+          <canvas id="dailyTrendChart"></canvas>
+          <div id="no-trend-chart" style="display: none; position: absolute; inset: 0; align-items: center; justify-content: center; flex-direction: column; text-align: center; color: var(--text-muted);">
+            <i data-lucide="activity" style="width: 40px; height: 40px; margin-bottom: 8px;"></i>
+            <p style="font-size: 0.85rem; font-weight: 600;">Add transactions to plot spend trends</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly Spending trends Bar Chart -->
+      <div class="card chart-card">
+        <div class="chart-header">
+          <h3 class="chart-title">Monthly Spending Trends</h3>
+          <span class="font-mono text-muted" style="font-size: 0.7rem;">Comparison Bar Chart</span>
+        </div>
+        <div class="chart-canvas-wrapper">
+          <canvas id="monthlySpendingChart"></canvas>
+          <div id="no-monthly-chart" style="display: none; position: absolute; inset: 0; align-items: center; justify-content: center; flex-direction: column; text-align: center; color: var(--text-muted);">
+            <i data-lucide="bar-chart-2" style="width: 40px; height: 40px; margin-bottom: 8px;"></i>
+            <p style="font-size: 0.85rem; font-weight: 600;">Add data in other months to see trends</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Savings Goal Progress Doughnut Chart -->
+      <div class="card chart-card">
+        <div class="chart-header">
+          <h3 class="chart-title">Savings Goal Progress</h3>
+          <span class="font-mono text-muted" style="font-size: 0.7rem;">Target Progress Chart</span>
+        </div>
+        <div class="chart-canvas-wrapper">
+          <canvas id="savingsProgressChart"></canvas>
+          <div id="no-savings-chart" style="display: none; position: absolute; inset: 0; align-items: center; justify-content: center; flex-direction: column; text-align: center; color: var(--text-muted);">
+            <i data-lucide="target" style="width: 40px; height: 40px; margin-bottom: 8px;"></i>
+            <p style="font-size: 0.85rem; font-weight: 600;">Configure Salary & Savings Goal to view progress</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expense Rankings & Analytical Averages -->
+    <div class="card" style="margin-bottom: 30px;">
+      <h3 class="font-display" style="font-size: 1rem; font-weight: 700; margin: 0 0 15px 0; display: flex; align-items: center; gap: 6px;">
+        <i data-lucide="bar-chart-3" style="color: var(--amber); width: 18px; height: 18px;"></i>
+        <span>Expense Rankings & Averages (Current Month)</span>
+      </h3>
+      <div style="display: grid; grid-template-columns: 1fr; md:grid-template-columns: 1fr 1fr; gap: 20px;">
+        <!-- Left: Category Rankings -->
+        <div style="border-right: none; md:border-right: 1px solid var(--border-color); padding-right: 0; md:padding-right: 20px;" class="rankings-column">
+          <div style="margin-bottom: 12px;">
+            <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Top Spending Category:</span>
+            <div id="ranking-top-categories" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-top: 2px;">Calculating...</div>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Least Spending Category:</span>
+            <div id="ranking-least-categories" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-top: 2px;">Calculating...</div>
+          </div>
+          <div>
+            <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Highest Single Expense:</span>
+            <div id="ranking-highest-expense" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-top: 2px;">Calculating...</div>
+          </div>
+        </div>
+        <!-- Right: Timeframe Averages -->
+        <div style="display: flex; flex-direction: column; justify-content: space-between;" class="averages-column">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Average Daily Expense:</span>
+            <span id="avg-daily-expense" style="font-family: var(--font-mono); font-weight: 700; color: var(--text-primary);">₹0.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Average Weekly Expense:</span>
+            <span id="avg-weekly-expense" style="font-family: var(--font-mono); font-weight: 700; color: var(--text-primary);">₹0.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Average Monthly Expense:</span>
+            <span id="avg-monthly-expense" style="font-family: var(--font-mono); font-weight: 700; color: var(--text-primary);">₹0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Latest Transactions Panel -->
+    <div class="transactions-panel">
+      <div class="transactions-header">
+        <h3 class="transactions-title">Latest 5 Transactions</h3>
+        <a href="/expenses" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">
+          <span>View All Transactions</span>
+          <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+        </a>
+      </div>
+
+      <div class="tx-table-container">
+        <table class="tx-table">
+          <thead>
+            <tr>
+              <th>Expense Details</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="latest-expenses-tbody">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Ledger Inc. Protected by Bank-Grade SQLite Cryptography.</p>
+      <p class="font-mono" style="font-size: 0.65rem;">System version 1.0.0 (Vanilla JS & Flask)</p>
+    </div>
+  </footer>
+
+  <!-- ================= MODALS SECTION ================= -->
+
+  <!-- Modal: Set/Update Budget -->
+  <div class="modal-overlay" id="modal-budget">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="budget-modal-title">Smart Advisor Settings</h3>
+        <button class="modal-close" data-close-modal="modal-budget" aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-update-budget">
+        <div class="modal-body">
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" for="input-salary-val">Monthly Salary / Income (₹)</label>
+            <div class="input-wrapper">
+              <i data-lucide="coins" class="input-icon"></i>
+              <input type="number" step="0.01" min="0" class="form-input" id="input-salary-val" required placeholder="e.g. 50000" style="padding-left: 36px;">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" for="input-savings-val">Monthly Savings Goal (₹)</label>
+            <div class="input-wrapper">
+              <i data-lucide="target" class="input-icon"></i>
+              <input type="number" step="0.01" min="0" class="form-input" id="input-savings-val" required placeholder="e.g. 15000" style="padding-left: 36px;">
+            </div>
+          </div>
+          <div class="form-group" style="background-color: var(--bg-tertiary); padding: 12px; border-radius: var(--radius-sm); margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">Calculated Spending Budget:</span>
+              <span id="calculated-spending-budget" style="font-family: var(--font-mono); font-weight: 700; color: var(--primary);">₹0.00</span>
+            </div>
+            <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; margin-bottom: 0;">Available Spending Budget = Monthly Salary − Savings Goal</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-budget">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-budget">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Custom Category -->
+  <div class="modal-overlay" id="modal-category">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Create Custom Category</h3>
+        <button class="modal-close" data-close-modal="modal-category" aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-create-category">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="input-cat-name">Category Name</label>
+            <div class="input-wrapper">
+              <i data-lucide="tag" class="input-icon"></i>
+              <input type="text" maxlength="30" class="form-input" id="input-cat-name" required placeholder="e.g. Subscriptions">
+            </div>
+            <p class="stat-desc" style="margin-top: 4px;">Max 30 characters. This category will instantly be available when creating or editing expenses.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-category">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-category">Create Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add/Edit Expense -->
+  <div class="modal-overlay" id="modal-expense">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="expense-modal-title">Add Expense Record</h3>
+        <button class="modal-close" data-close-modal="modal-expense" aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-save-expense">
+        <!-- Hidden input for ID when editing -->
+        <input type="hidden" id="input-expense-id">
+        
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="input-expense-name">Expense Name / Title</label>
+            <div class="input-wrapper">
+              <i data-lucide="file-text" class="input-icon"></i>
+              <input type="text" class="form-input" id="input-expense-name" required placeholder="e.g. Swiggy Lunch">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="input-expense-amount">Amount (₹)</label>
+              <div class="input-wrapper">
+                <i data-lucide="indian-rupee" class="input-icon"></i>
+                <input type="number" step="0.01" min="0.01" class="form-input" id="input-expense-amount" required placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="input-expense-date">Transaction Date</label>
+              <div class="input-wrapper">
+                <i data-lucide="calendar" class="input-icon" style="z-index: 10;"></i>
+                <input type="date" class="form-input" id="input-expense-date" required style="padding-left: 42px;">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="select-expense-cat">Category</label>
+            <div class="filter-wrapper">
+              <select class="form-input" id="select-expense-cat" required style="padding-left: 14px; appearance: none; cursor: pointer;">
+                <!-- Dynamically populated from available categories -->
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="textarea-expense-desc">Description (Optional)</label>
+            <textarea class="form-input" id="textarea-expense-desc" rows="3" placeholder="Add optional reference details..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-expense">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-expense">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Load Third-Party Dependencies -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Load Main Dashboard JavaScript Script -->
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script>
+    // Execute dashboard page load routines
+    document.addEventListener("DOMContentLoaded", () => {
+      initDashboard();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Expense Tracker",
+  "description": "A professional and user-friendly Expense Tracker with categories, budget monitoring, real-time analytics, dynamic charts, and responsive dark/light mode.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expenses Log - Ledger Smart Expense Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header id="app-header">
+    <div class="container header-container">
+      <a href="/" class="logo">
+        <div class="logo-icon">
+          <i data-lucide="wallet"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Ledger</h1>
+          <p>Smart Wealth Management</p>
+        </div>
+      </a>
+      
+      <div class="nav-actions">
+        <a href="/dashboard" class="btn btn-secondary" style="border: none;" id="nav-dash">
+          <i data-lucide="layout-dashboard"></i>
+          <span style="display: none; sm:inline;">Dashboard</span>
+        </a>
+        <a href="/expenses" class="btn btn-secondary" style="border: none; background-color: var(--primary-light); color: var(--primary);" id="nav-tx">
+          <i data-lucide="list"></i>
+          <span style="display: none; sm:inline;">Expenses Log</span>
+        </a>
+        <button class="btn-icon" id="theme-toggle" title="Toggle Theme" aria-label="Toggle theme">
+          <i data-lucide="moon" id="theme-icon"></i>
+        </button>
+        <div style="width: 1px; height: 24px; background-color: var(--border-color); margin: 0 4px;"></div>
+        <span class="font-mono" style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); display: none; md:inline;">@{{ username }}</span>
+        <a href="/logout" class="btn btn-secondary btn-danger" style="padding: 10px 14px;" title="Sign Out" aria-label="Sign out">
+          <i data-lucide="log-out"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="container" style="padding-top: 30px; padding-bottom: 50px;">
+    
+    <!-- Title Area -->
+    <div class="welcome-hero" style="margin-bottom: 24px; align-items: center; justify-content: space-between; flex-direction: row;">
+      <div>
+        <h2 style="font-size: 1.3rem;">Transactions Register</h2>
+        <p>Complete historical log of your categorized expenditures.</p>
+      </div>
+      <div>
+        <button class="btn btn-primary" id="btn-add-expense-trigger">
+          <i data-lucide="plus"></i>
+          <span>Add Expense</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Categories Quick Filter Pills -->
+    <div class="category-pills" id="expenses-category-pills">
+      <div class="category-pill active" data-pill-cat="All">All Categories</div>
+      <!-- Dynamic category pills will be appended here -->
+    </div>
+
+    <!-- Active Filter/Search Toolbar -->
+    <div class="card" style="padding: 18px; margin-bottom: 24px;">
+      <div class="toolbar">
+        
+        <!-- Interactive Search Bar -->
+        <div class="search-container">
+          <i data-lucide="search" class="input-icon" style="top: 50%; transform: translateY(-50%);"></i>
+          <input type="text" class="form-input" id="search-input" placeholder="Search by description or merchant title..." style="padding-left: 42px; padding-top: 10px; padding-bottom: 10px; font-size: 0.8rem;">
+        </div>
+
+        <!-- Month selector -->
+        <div class="filter-wrapper">
+          <i data-lucide="calendar-days" class="input-icon" style="top: 50%; transform: translateY(-50%); pointer-events: none; left: 12px; z-index: 10; width: 16px; height: 16px;"></i>
+          <input type="month" id="filter-month" class="form-input" style="padding-left: 38px; padding-top: 9px; padding-bottom: 9px; font-size: 0.8rem; cursor: pointer; min-width: 150px;">
+        </div>
+
+        <!-- Category Dropdown (backup/sync) -->
+        <div class="filter-wrapper">
+          <select id="filter-category" class="filter-select">
+            <option value="All">All Categories</option>
+            <!-- Dynamic options -->
+          </select>
+        </div>
+
+        <!-- Sort dropdown -->
+        <div class="filter-wrapper">
+          <select id="sort-select" class="filter-select">
+            <option value="date_desc">Date: Latest First</option>
+            <option value="date_asc">Date: Oldest First</option>
+            <option value="amount_desc">Amount: High to Low</option>
+            <option value="amount_asc">Amount: Low to High</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <button class="btn btn-secondary" id="btn-reset-filters" style="min-height: auto; height: 38px; padding: 0 14px;" title="Reset Filters" aria-label="Reset filters">
+          <i data-lucide="rotate-ccw"></i>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Transactions Register Card -->
+    <div class="transactions-panel">
+      <div class="tx-table-container">
+        <table class="tx-table">
+          <thead>
+            <tr>
+              <th>Expense Details</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="expenses-tbody">
+            <!-- Dynamically populated rows -->
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <i data-lucide="loader-2" class="spinner" style="margin: 0 auto 12px; display: block;"></i>
+                <span>Loading complete register records...</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="pagination">
+        <div class="pagination-info" id="pagination-info-text">
+          Showing 0-0 of 0 entries
+        </div>
+        <div class="pagination-controls">
+          <button class="btn btn-secondary" id="btn-pagination-prev" disabled style="min-height: auto; height: 36px; padding: 0 14px;">
+            <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>
+            <span>Prev</span>
+          </button>
+          <button class="btn btn-secondary" id="btn-pagination-next" disabled style="min-height: auto; height: 36px; padding: 0 14px;">
+            <span>Next</span>
+            <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Ledger Inc. Protected by Bank-Grade SQLite Cryptography.</p>
+      <p class="font-mono" style="font-size: 0.65rem;">System version 1.0.0 (Vanilla JS & Flask)</p>
+    </div>
+  </footer>
+
+  <!-- ================= MODALS SECTION ================= -->
+
+  <!-- Modal: Add/Edit Expense -->
+  <div class="modal-overlay" id="modal-expense">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="expense-modal-title">Add Expense Record</h3>
+        <button class="modal-close" data-close-modal="modal-expense" aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-save-expense">
+        <!-- Hidden input for ID when editing -->
+        <input type="hidden" id="input-expense-id">
+        
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="input-expense-name">Expense Name / Title</label>
+            <div class="input-wrapper">
+              <i data-lucide="file-text" class="input-icon"></i>
+              <input type="text" class="form-input" id="input-expense-name" required placeholder="e.g. Hostinger Hosting">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="input-expense-amount">Amount (₹)</label>
+              <div class="input-wrapper">
+                <i data-lucide="indian-rupee" class="input-icon"></i>
+                <input type="number" step="0.01" min="0.01" class="form-input" id="input-expense-amount" required placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="input-expense-date">Transaction Date</label>
+              <div class="input-wrapper">
+                <i data-lucide="calendar" class="input-icon" style="z-index: 10;"></i>
+                <input type="date" class="form-input" id="input-expense-date" required style="padding-left: 42px;">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="select-expense-cat">Category</label>
+            <div class="filter-wrapper">
+              <select class="form-input" id="select-expense-cat" required style="padding-left: 14px; appearance: none; cursor: pointer;">
+                <!-- Dynamically populated from available categories -->
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="textarea-expense-desc">Description (Optional)</label>
+            <textarea class="form-input" id="textarea-expense-desc" rows="3" placeholder="Add optional reference details..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-expense">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-expense">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Load Third-Party Dependencies -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Load Main JavaScript Script -->
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script>
+    // Execute expenses list routines
+    document.addEventListener("DOMContentLoaded", () => {
+      initExpensesPage();
+    });
+  </script>
+</body>
+</html>

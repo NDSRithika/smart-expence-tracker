@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Ledger Smart Expense Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <header id="app-header">
+    <div class="container header-container">
+      <a href="/" class="logo" id="header-logo">
+        <div class="logo-icon">
+          <i data-lucide="wallet"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Ledger</h1>
+          <p>Smart Wealth Management</p>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <button class="btn-icon" id="theme-toggle" title="Toggle Theme" aria-label="Toggle Theme">
+          <i data-lucide="moon" id="theme-icon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="auth-wrapper">
+    <div class="card auth-card" id="login-container">
+      <div class="auth-header">
+        <div class="logo-icon" style="margin: 0 auto 16px; width: 48px; height: 48px; font-size: 1.5rem;">
+          <i data-lucide="shield-check"></i>
+        </div>
+        <h2>Welcome Back</h2>
+        <p>Enter your details to manage your wealth portfolio</p>
+      </div>
+
+      {% if error %}
+      <div class="alert alert-danger" id="error-alert">
+        <i data-lucide="alert-circle"></i>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
+
+      <form action="{{ url_for('login') }}" method="POST" id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="username">Username</label>
+          <div class="input-wrapper">
+            <i data-lucide="user" class="input-icon"></i>
+            <input type="text" id="username" name="username" class="form-input" placeholder="e.g. rich_investor" required autocomplete="username">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-wrapper">
+            <i data-lucide="lock" class="input-icon"></i>
+            <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="btn-icon" id="password-toggle" style="position: absolute; right: 8px; border: none; height: 32px; width: 32px;" title="Show Password" aria-label="Show password">
+              <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="login-btn">
+          <span>Login</span>
+          <i data-lucide="arrow-right"></i>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Don't have an account? <a href="{{ url_for('register') }}" id="register-link">Sign up now</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Ledger Inc. Protected by Bank-Grade SQLite Cryptography.</p>
+      <p class="font-mono" style="font-size: 0.65rem;">System version 1.0.0 (Vanilla JS & Flask)</p>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Theme Management
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const html = document.documentElement;
+
+    const savedTheme = localStorage.getItem('ledger-theme') || 'light';
+    html.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('ledger-theme', newTheme);
+      updateThemeIcon(newTheme);
+    });
+
+    function updateThemeIcon(theme) {
+      if (!themeIcon) return;
+      if (theme === 'dark') {
+        themeIcon.setAttribute('data-lucide', 'sun');
+      } else {
+        themeIcon.setAttribute('data-lucide', 'moon');
+      }
+      lucide.createIcons();
+    }
+
+    // Password Toggle Visibility
+    const passwordInput = document.getElementById('password');
+    const passwordToggle = document.getElementById('password-toggle');
+    if (passwordToggle && passwordInput) {
+      passwordToggle.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        const icon = passwordToggle.querySelector('i');
+        if (icon) {
+          if (type === 'text') {
+            icon.setAttribute('data-lucide', 'eye-off');
+          } else {
+            icon.setAttribute('data-lucide', 'eye');
+          }
+          lucide.createIcons();
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Ledger Smart Expense Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <header id="app-header">
+    <div class="container header-container">
+      <a href="/" class="logo" id="header-logo">
+        <div class="logo-icon">
+          <i data-lucide="wallet"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Ledger</h1>
+          <p>Smart Wealth Management</p>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <button class="btn-icon" id="theme-toggle" title="Toggle Theme" aria-label="Toggle theme">
+          <i data-lucide="moon" id="theme-icon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="auth-wrapper">
+    <div class="card auth-card" id="register-container">
+      <div class="auth-header">
+        <div class="logo-icon" style="margin: 0 auto 16px; width: 48px; height: 48px; font-size: 1.5rem; background-color: var(--indigo); box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);">
+          <i data-lucide="user-plus"></i>
+        </div>
+        <h2>Create Account</h2>
+        <p>Register for secure, localized personal financial bookkeeping</p>
+      </div>
+
+      {% if error %}
+      <div class="alert alert-danger" id="error-alert">
+        <i data-lucide="alert-circle"></i>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
+
+      {% if success %}
+      <div class="alert alert-success" id="success-alert">
+        <i data-lucide="check-circle2"></i>
+        <span>{{ success }}</span>
+      </div>
+      {% endif %}
+
+      <form action="{{ url_for('register') }}" method="POST" id="register-form">
+        <div class="form-group">
+          <label class="form-label" for="username">Username</label>
+          <div class="input-wrapper">
+            <i data-lucide="user" class="input-icon"></i>
+            <input type="text" id="username" name="username" class="form-input" minlength="3" maxlength="25" placeholder="Choose a username" required autocomplete="username">
+          </div>
+          <p class="stat-desc" style="margin-left: 4px; margin-top: 2px;">Min 3 alphanumeric characters.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-wrapper">
+            <i data-lucide="lock" class="input-icon"></i>
+            <input type="password" id="password" name="password" class="form-input" minlength="6" placeholder="Choose a secure password" required autocomplete="new-password">
+          </div>
+          <p class="stat-desc" style="margin-left: 4px; margin-top: 2px;">Min 6 characters.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="confirm_password">Confirm Password</label>
+          <div class="input-wrapper">
+            <i data-lucide="shield-alert" class="input-icon"></i>
+            <input type="password" id="confirm_password" name="confirm_password" class="form-input" minlength="6" placeholder="Confirm your password" required autocomplete="new-password">
+          </div>
+        </div>
+
+        <div style="border-top: 1px dashed var(--border-color); padding-top: 15px; margin-top: 15px; margin-bottom: 15px;">
+          <h4 class="font-display" style="font-size: 0.85rem; font-weight: 700; color: var(--indigo); margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+            <span>Configure Smart Advisor (Optional)</span>
+          </h4>
+          
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="monthly_salary" style="font-size: 0.75rem;">Monthly Salary / Income (₹)</label>
+            <div class="input-wrapper">
+              <i data-lucide="coins" class="input-icon"></i>
+              <input type="number" step="0.01" min="0" id="monthly_salary" name="monthly_salary" class="form-input" placeholder="e.g. 50000">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="savings_goal" style="font-size: 0.75rem;">Monthly Savings Goal (₹)</label>
+            <div class="input-wrapper">
+              <i data-lucide="target" class="input-icon"></i>
+              <input type="number" step="0.01" min="0" id="savings_goal" name="savings_goal" class="form-input" placeholder="e.g. 15000">
+            </div>
+            <p class="stat-desc" style="margin-left: 4px; margin-top: 4px;">Sets up automated budget alerts, health indexes, and monthly savings estimations.</p>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="register-btn">
+          <span>Sign Up</span>
+          <i data-lucide="user-check"></i>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Already have an account? <a href="{{ url_for('login') }}" id="login-link">Log in here</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Ledger Inc. Protected by Bank-Grade SQLite Cryptography.</p>
+      <p class="font-mono" style="font-size: 0.65rem;">System version 1.0.0 (Vanilla JS & Flask)</p>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Theme Management
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const html = document.documentElement;
+
+    const savedTheme = localStorage.getItem('ledger-theme') || 'light';
+    html.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('ledger-theme', newTheme);
+      updateThemeIcon(newTheme);
+    });
+
+    function updateThemeIcon(theme) {
+      if (!themeIcon) return;
+      if (theme === 'dark') {
+        themeIcon.setAttribute('data-lucide', 'sun');
+      } else {
+        themeIcon.setAttribute('data-lucide', 'moon');
+      }
+      lucide.createIcons();
+    }
+
+    // Basic Client-Side Validation to prevent mismatched passwords
+    const form = document.getElementById('register-form');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+
+    form.addEventListener('submit', (event) => {
+      if (password.value !== confirmPassword.value) {
+        event.preventDefault();
+        alert("Passwords do not match. Please verify and try again.");
+      }
+    });
+  </script>
+</body>
+</html>
